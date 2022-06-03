@@ -1,0 +1,278 @@
+---
+title: "Online_Cryptography_Ads_Analysis_using_EDA"
+author: "Christopher Toromo"
+date: '2022-05-26'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# 1. Defining the Question
+## a) Specifying the Data Analytic Question
+  
+  To create a model to identify which individuals are most likely to click on ads. 
+  
+## b) Defining the Metric for Success
+
+The study will be considered successful if we shall be able to get insight from the data using the Exploratory data analysis.
+
+## c) Understanding the context
+  Advertising is a means of communication with the users of a product or service. Advertisements are messages paid for by those who send them and are intended to inform or influence people who receive them. Advertising is always present, though people may not be aware of it. In today's world, advertising uses every possible media to get its message through. It does this via television, print (newspapers, magazines, journals etc), radio, press, internet, direct selling, hoardings, mailers, contests, sponsorships, posters, clothes, events, colours, sounds, visuals and even people (endorsements). In our model, we shall try to predict the probabilty of a person clicking on an ad.
+  
+## d). Recording the Experimental Design
+  
+  We will use exploratory data analysis, such as Univariate and Bivariate in this study to determine the relationships and differences between different variables.
+
+## e) Data Relevance
+
+  The dataset to use for this project can be found by following this link:
+  https://www.bit.ly/IPAdvertisingData
+  
+
+# 2. Reading the Data
+
+```{r}
+
+advertising <- read.csv("https://www.bit.ly/IPAdvertisingData")
+
+```
+ 
+# 3. Checking the Data
+
+## a) Checking the top data
+
+```{r}
+head(advertising)
+```
+## b). Checking the bottom data
+
+```{r}
+tail(advertising)
+```
+
+
+## c). Checking the Structure of the Dataset
+  
+```{r}
+str(advertising)
+```
+  
+## d). Checking the shape of our data
+
+```{r}
+dim(advertising)
+```
+We have 1000 rows and 10 columns in our dataset
+
+
+# 4. Tidying the Dataset
+
+## a). Checking the Missing Values
+
+```{r}
+colSums(is.na(advertising))
+```
+
+From the above, we can see that we do not have Missing Values in the dataset.
+
+## b). Checking for Duplicate Values
+
+```{r}
+duplicated_rows <- advertising[duplicated(advertising),]
+
+duplicated_rows
+```
+
+We can also see that we have 0 rows containing duplicates values. This is very import for the consitency of data.
+
+## c). Checking for Outliers
+
+We shall use Boxplot to check for outliers in our numeric features
+
+```{r}
+# Selecting Numeric columns
+
+library("dplyr")
+
+# getting numeric columns using dplyr() function             
+numeric_col <- select_if(advertising, is.numeric)
+
+head(numeric_col)
+```
+```{r}
+# Plotting Boxplot for the Numeric columns
+
+boxplot(numeric_col,main="BoxPlot for the Numeric Features", col="darkgreen")
+```
+We can clearly see we have outliers in our Area.Income feature. We shall be removing the outlier using the Interquartile Range Method
+
+```{r}
+outliersValue <- boxplot.stats(advertising$Area.Income)$out
+
+advertising$Area.Income[!advertising$Area.Income %in% outliersValue]
+
+```
+
+# 5. Exploratory Data Analysis
+
+## a) Univariate Analysis
+
+We shall use the Graphical method to do the Univeriate Analysis
+
+### i). Measures of Central Tendency
+
+```{r}
+# Mean Age
+
+mean(advertising$Age)
+
+```
+We can see the average age is aroung 36 years
+
+```{r}
+# Median Age
+
+median(advertising$Age)
+
+```
+The median age is 35 years
+
+```{r}
+# Average Daily spent on Site
+
+mean(advertising$Daily.Time.Spent.on.Site)
+
+```
+```{r}
+mean(advertising$Daily.Internet.Usage)
+```
+```{r}
+# Mode of Area Income
+
+mode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+mode(advertising$Area.Income)
+
+```
+The modal Area Income is 61833
+
+
+### ii). Measures of Dispersion
+
+```{r}
+# Checking the range of the Numeric columns of the Area Income
+
+range(advertising$Area.Income)
+
+```
+
+```{r}
+# Checking the maximum age
+
+max(advertising$Age)
+```
+```{r}
+# Checking the minimum age
+
+min(advertising$Age)
+```
+```{r}
+# Checking the Variance of the Area Income
+
+var(advertising$Area.Income)
+
+```
+```{r}
+# Checking the Standard Deviation of the Area Income
+
+sd(advertising$Area.Income)
+
+```
+### iii) Univariate Graphical
+
+We shall be using the box plot to display our age data
+
+```{r}
+# Boxplot for age
+
+boxplot(advertising$Age,col="gold")
+```
+We shall use bar graph to show the gender(Male) feature of our data
+
+```{r}
+gender_frequency <- table(advertising$Male)
+
+barplot(gender_frequency, main = "Bargraph for Gender")
+```
+We have slightly more females than males as clearly shown on the bargraph. The 0 implies Female while 1 implies male
+
+
+```{r}
+# Histogram to show the Daily Internet Usage
+
+hist(advertising$Daily.Internet.Usage, main = "Histogram for Daily Internet Usage")
+```
+
+## b). Bivariate Analysis
+
+### i). Covariance
+
+```{r}
+cov(numeric_col)
+```
+
+### ii). Correlation
+
+```{r}
+cor(numeric_col)
+```
+
+We shall now visualize the correlation matrix
+
+```{r}
+# Loading the corrplot 
+
+library(corrplot)
+
+```
+```{r}
+
+# Dropping the Male from numeric column
+
+num_col <- subset(numeric_col, select = -c(Male))
+
+
+corr_matrix <- cor(num_col)
+
+corrplot(corr_matrix, method='number')
+  
+```
+From the above Correlation Matrix, we can see there is strong inverse correction between Daily Internet Usage and Clicked on Ad.
+
+
+### iii). Scatterplot
+
+We shall use the scatterplot to show the relationship between Area Income and Daily Internet Usage
+
+```{r}
+
+area_income <- advertising$Area.Income
+daily_usage <- advertising$Daily.Internet.Usage
+
+plot(area_income,daily_usage,xlab="Area Income", ylab="Daily Internet Usage",main="Scatterplot for Area Income and Daily Internet usage")
+
+```
+
+# 6. Conclusion and Recommedation
+
+From our Exploratory Data Analysis, we can easily see the relation between the various features of our dataset.We have seen that older people are more likely to click on the ads this is because there is a positive correlation between age and click on ad. Hence the entrepreneur should focus more on older people. Also we have seen that with increase on Daily Internet Usage, there is a huge reduction dlick on ads, this implies the entrepreneur should focus more on individual with low daily internet usage.
+
+# 7. Follow up questions
+## a) Did we have the right data?
+Yes, the dataset available for this analysis was relevant to the research problem.
+
+## b) Do we need other data to answer the research question?
+No, the dataset provided had relevant information for the research question.
